@@ -16,10 +16,27 @@ class OrangeBank(bankAccounts: Seq[BankAccount]) extends Bank {
   }
 
   def withdraw(accountNumber: String, amount: Double): Option[BankAccount] = {
-    Try(findBankAccount(accountNumber).map(_.withdraw(amount))).toOption.flatten
+    val maybeBankAccount = findBankAccount(accountNumber)
+    val maybeUpdatedBankAccount = maybeBankAccount.flatMap(bankAccount => Try(bankAccount.withdraw(amount)).toOption)
+
+    updateBankAccount(maybeBankAccount, maybeUpdatedBankAccount)
+
+    maybeUpdatedBankAccount
   }
 
   def deposit(accountNumber: String, amount: Double): Option[BankAccount] = {
-    Try(findBankAccount(accountNumber).map(_.deposit(amount))).toOption.flatten
+    val maybeBankAccount = findBankAccount(accountNumber)
+    val maybeUpdatedBankAccount = maybeBankAccount.flatMap(bankAccount => Try(bankAccount.deposit(amount)).toOption)
+
+    updateBankAccount(maybeBankAccount, maybeUpdatedBankAccount)
+
+    maybeUpdatedBankAccount
+  }
+
+  private def updateBankAccount(maybeBankAccount: Option[BankAccount], maybeUpdatedBankAccount: Option[BankAccount]) = {
+    for {
+      bankAccount <- maybeBankAccount
+      updatedBankAccount <- maybeUpdatedBankAccount
+    } yield bankAccounts.updated(bankAccounts.indexOf(bankAccount), updatedBankAccount)
   }
 }
